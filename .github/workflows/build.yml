@@ -1,18 +1,14 @@
 name: build
-on: [push]
+on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        build_type: [debug]
-        enable_ui: [off]
-        include:
-          - os: ubuntu-latest
-            build_type: debug
-            enable_ui: on
+        os: [windows-latest]
+        build_type: [release]
+        enable_ui: [on]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -20,14 +16,6 @@ jobs:
     - uses: seanmiddleditch/gha-setup-ninja@master
     - uses: ilammy/msvc-dev-cmd@v1
       if: runner.os == 'Windows'
-    - name: Install Dependencies
-      shell: bash
-      run: |
-        if [[ "${{ runner.os }}" == "Linux" ]] ; then
-          sudo apt-get update -qq
-          sudo apt-get install -y \
-            libx11-dev libxcursor-dev libxi-dev
-        fi
     - name: Generating Makefiles
       shell: bash
       run: |
@@ -56,3 +44,9 @@ jobs:
         git clone --recursive https://github.com/aseprite/tests.git
         cd tests
         $XVFB bash run-tests.sh
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build
+        path: build/bin/aseprite
+
